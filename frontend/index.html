@@ -1,0 +1,255 @@
+Here is the full, cleaned-up version of your index.html.
+
+I have removed the hardcoded API URL and the session token, replacing them with clearly labeled placeholders. This is now safe to upload to a public GitHub repository.
+
+HTML
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Identity Verification Hub</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #121214;
+            color: #eaeaea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            background: #1c1c1e;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+            border: 1px solid #2c2c2e;
+            transition: border-color 0.4s ease, box-shadow 0.4s ease;
+            position: relative;
+        }
+        h2 { color: #f5a623; margin-top: 0; letter-spacing: 0.5px; }
+        p { color: #a1a1aa; font-size: 0.95rem; margin-bottom: 2rem; }
+        
+        .step-container { margin-bottom: 2rem; text-align: left; }
+        .step-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #f5a623;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+        }
+        .step-status { font-size: 0.8rem; color: #a1a1aa; }
+        
+        .upload-box {
+            border: 2px dashed #444;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: #252529;
+            cursor: pointer;
+            text-align: center;
+            transition: border-color 0.3s, opacity 0.3s;
+            position: relative;
+            overflow: hidden;
+            min-height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .upload-box:hover { border-color: #f5a623; }
+        input[type="file"] { display: none; }
+        
+        .disabled-step { opacity: 0.4; pointer-events: none; }
+        
+        button {
+            background: #f5a623;
+            color: #121214;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s, transform 0.1s;
+            margin-top: 1rem;
+        }
+        button:hover { background: #e0961b; }
+        button:disabled { background: #555; color: #888; cursor: not-allowed; }
+        
+        .status-panel {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 6px;
+            background: #121214;
+            font-family: monospace;
+            font-size: 0.85rem;
+            text-align: left;
+            display: none;
+            white-space: pre-wrap;
+            border-left: 4px solid #f5a623;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+
+        .processing-pulse {
+            border-color: #f5a623 !important;
+            box-shadow: 0 0 15px rgba(245, 166, 35, 0.15);
+            color: #f5a623 !important;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" id="hub-container">
+    <h2>Verification Portal</h2>
+    <p>Submit identity documentation to initiate the asynchronous verification pipeline.</p>
+    
+    <div class="step-container" id="step-1-wrapper">
+        <div class="step-title">
+            <span>Step 1: Government-Issued ID</span>
+            <span class="step-status" id="id-status-badge">Required</span>
+        </div>
+        <div class="upload-box" id="id-drop-zone">
+            <span id="id-label">Upload Government Identification Document</span>
+            <input type="file" id="id-input" accept="image/png, image/jpeg">
+        </div>
+    </div>
+
+    <div class="step-container disabled-step" id="step-2-wrapper">
+        <div class="step-title">
+            <span>Step 2: Profile Selfie Scan</span>
+            <span class="step-status" id="selfie-status-badge">Locked</span>
+        </div>
+        <div class="upload-box" id="selfie-drop-zone">
+            <span id="selfie-label">Select Face Profile Asset</span>
+            <input type="file" id="selfie-input" accept="image/png, image/jpeg">
+        </div>
+    </div>
+
+    <button id="submit-btn" disabled>Submit Verification Assets</button>
+    
+    <div class="status-panel" id="console-output"></div>
+</div>
+
+<script>
+    // --- SECURITY CONFIGURATION ---
+    // Replace these values with your actual deployment details
+    const API_URL = "YOUR_API_GATEWAY_URL_HERE";
+    const SESSION_TOKEN = "YOUR_SECURE_TOKEN_HERE";
+    // ------------------------------
+
+    const idInput = document.getElementById('id-input');
+    const idLabel = document.getElementById('id-label');
+    const idStatusBadge = document.getElementById('id-status-badge');
+    const idDropZone = document.getElementById('id-drop-zone');
+    
+    const selfieWrapper = document.getElementById('step-2-wrapper');
+    const selfieInput = document.getElementById('selfie-input');
+    const selfieLabel = document.getElementById('selfie-label');
+    const selfieStatusBadge = document.getElementById('selfie-status-badge');
+    const selfieDropZone = document.getElementById('selfie-drop-zone');
+    
+    const submitBtn = document.getElementById('submit-btn');
+    const consoleOutput = document.getElementById('console-output');
+    const hubContainer = document.getElementById('hub-container');
+
+    let idBase64 = null;
+    let selfieBase64 = null;
+
+    idDropZone.addEventListener('click', () => idInput.click());
+    selfieDropZone.addEventListener('click', () => selfieInput.click());
+
+    const convertToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = (error) => reject(error);
+    });
+
+    idInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            idLabel.textContent = `Selected ID: ${file.name}`;
+            idStatusBadge.textContent = "Ready";
+            idStatusBadge.style.color = "#f5a623";
+            selfieWrapper.classList.remove('disabled-step');
+            selfieStatusBadge.textContent = "Required";
+            idBase64 = await convertToBase64(file);
+        }
+    });
+
+    selfieInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            selfieLabel.textContent = `Selected Selfie: ${file.name}`;
+            selfieStatusBadge.textContent = "Ready";
+            selfieStatusBadge.style.color = "#f5a623";
+            submitBtn.disabled = false;
+            selfieBase64 = await convertToBase64(file);
+        }
+    });
+
+    submitBtn.addEventListener('click', async () => {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Processing...";
+        consoleOutput.style.display = "block";
+        consoleOutput.textContent = "[INFO] Initializing structured data uploads...\n";
+
+        const dynamicUserId = `user_${Date.now()}`;
+
+        try {
+            // Upload Logic
+            const idResponse = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "UPLOAD_ID", session_token: SESSION_TOKEN, user_id: dynamicUserId, id_image_base64: idBase64 })
+            });
+            if (!idResponse.ok) throw new Error("Upload failed");
+            
+            const selfieResponse = await fetch(API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "UPLOAD", session_token: SESSION_TOKEN, user_id: dynamicUserId, selfie_image_base64: selfieBase64 })
+            });
+            if (!selfieResponse.ok) throw new Error("Selfie failed");
+
+            // Polling Logic
+            let pollAttempts = 0;
+            const pollInterval = setInterval(async () => {
+                pollAttempts++;
+                try {
+                    const res = await fetch(API_URL, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ action: "STATUS", session_token: SESSION_TOKEN, user_id: dynamicUserId })
+                    });
+                    const data = await res.json();
+                    const status = data.status || "";
+
+                    consoleOutput.textContent += `[POLL] Status: ${status}...\n`;
+
+                    if (status === "VERIFIED") {
+                        clearInterval(pollInterval);
+                        consoleOutput.textContent += "[SUCCESS] Verification Complete.";
+                        submitBtn.textContent = "Complete";
+                    } else if (pollAttempts >= 10) {
+                        clearInterval(pollInterval);
+                        consoleOutput.textContent += "[ERROR] Timeout.";
+                    }
+                } catch (e) { console.error(e); }
+            }, 3000);
+
+        } catch (error) {
+            consoleOutput.textContent += `[ERROR] ${error.message}`;
+            submitBtn.disabled = false;
+        }
+    });
+</script>
+</body>
+</html>

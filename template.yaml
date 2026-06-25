@@ -1,0 +1,49 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CreativeSpark Biometric Identity Verification Pipeline
+
+Resources:
+  # 1. The Storage Bucket
+  IdentityStorageBucket:
+    Type: AWS::S3::Bucket
+
+  # 2. The Database
+  IdentityUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: creativespark-onboarding-users
+      AttributeDefinitions:
+        - AttributeName: UserId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UserId
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+  # 3. Router Lambda (The Upload Service)
+  UploadRouterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: creativespark-upload-service
+      CodeUri: upload_subservice/
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref IdentityStorageBucket
+          DYNAMODB_TABLE_NAME: !Ref IdentityUsersTable
+          AUTH_TOKEN: "SET_IN_AWS_CONSOLE"
+          VERIFY_WORKER_FUNCTION: !Ref VerifyWorkerFunction
+
+  # 4. Worker Lambda (The Biometric Matcher)
+  VerifyWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: creativespark-verify-service
+      CodeUri: creativespark_verify_worker/
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      Environment:
+        Variables:
+          S3_BUCKET_NAME: !Ref IdentityStorageBucket
+          DYNAMODB_TABLE_NAME: !Ref IdentityUsersTabl

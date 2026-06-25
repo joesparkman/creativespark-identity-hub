@@ -1,0 +1,10 @@
+# Secret environment files
+.env
+
+# Compiled Python files (these contain your local machine paths)
+__pycache__/
+*.pyc
+
+# System files (Mac/Windows junk)
+.DS_Store
+Thumbs.db
