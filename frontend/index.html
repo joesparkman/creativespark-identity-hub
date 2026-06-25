@@ -1,255 +1,543 @@
-Here is the full, cleaned-up version of your index.html.
-
-I have removed the hardcoded API URL and the session token, replacing them with clearly labeled placeholders. This is now safe to upload to a public GitHub repository.
-
-HTML
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Identity Verification Hub</title>
-    <style>
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #121214;
-            color: #eaeaea;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-        }
-        .container {
-            background: #1c1c1e;
-            padding: 2.5rem;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-            max-width: 480px;
-            width: 100%;
-            text-align: center;
-            border: 1px solid #2c2c2e;
-            transition: border-color 0.4s ease, box-shadow 0.4s ease;
-            position: relative;
-        }
-        h2 { color: #f5a623; margin-top: 0; letter-spacing: 0.5px; }
-        p { color: #a1a1aa; font-size: 0.95rem; margin-bottom: 2rem; }
-        
-        .step-container { margin-bottom: 2rem; text-align: left; }
-        .step-title {
-            font-size: 1rem;
-            font-weight: 600;
-            color: #f5a623;
-            margin-bottom: 0.5rem;
-            display: flex;
-            justify-content: space-between;
-        }
-        .step-status { font-size: 0.8rem; color: #a1a1aa; }
-        
-        .upload-box {
-            border: 2px dashed #444;
-            padding: 1.5rem;
-            border-radius: 8px;
-            background: #252529;
-            cursor: pointer;
-            text-align: center;
-            transition: border-color 0.3s, opacity 0.3s;
-            position: relative;
-            overflow: hidden;
-            min-height: 120px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .upload-box:hover { border-color: #f5a623; }
-        input[type="file"] { display: none; }
-        
-        .disabled-step { opacity: 0.4; pointer-events: none; }
-        
-        button {
-            background: #f5a623;
-            color: #121214;
-            border: none;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s, transform 0.1s;
-            margin-top: 1rem;
-        }
-        button:hover { background: #e0961b; }
-        button:disabled { background: #555; color: #888; cursor: not-allowed; }
-        
-        .status-panel {
-            margin-top: 1.5rem;
-            padding: 1rem;
-            border-radius: 6px;
-            background: #121214;
-            font-family: monospace;
-            font-size: 0.85rem;
-            text-align: left;
-            display: none;
-            white-space: pre-wrap;
-            border-left: 4px solid #f5a623;
-            max-height: 150px;
-            overflow-y: auto;
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Identity Verification Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cyan: #00d4e8;
+    --cyan-glow: rgba(0,212,232,0.4);
+    --green: #4af0a0;
+    --bg: #0a0e14;
+    --surface: #0f1520;
+    --border: rgba(0,212,232,0.18);
+    --muted: #5a6080;
+    --text: #cdd6f4;
+    --font: 'Share Tech Mono', 'Courier New', monospace;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .processing-pulse {
-            border-color: #f5a623 !important;
-            box-shadow: 0 0 15px rgba(245, 166, 35, 0.15);
-            color: #f5a623 !important;
-        }
-    </style>
+  body {
+    min-height: 100dvh;
+    background: var(--bg);
+    font-family: var(--font);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    overflow-x: hidden;
+    padding: 16px 12px 24px;
+  }
+
+  /* Grid bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,232,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,232,0.04) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none; z-index: 0;
+  }
+
+  .app { position: relative; z-index: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+
+  /* ── Page title ── */
+  .page-title {
+    font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase;
+    color: var(--cyan); opacity: 0.9; text-align: center;
+  }
+
+  /* ══════════════════════════════════
+     HEAD SCAN SECTION
+  ══════════════════════════════════ */
+  .scan-section { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+
+  .head-container {
+    position: relative;
+    width: 230px; height: 290px;
+    flex-shrink: 0;
+  }
+
+  /* Corner brackets */
+  .bracket {
+    position: absolute; width: 22px; height: 22px;
+    border-color: var(--cyan); border-style: solid; opacity: 0.8;
+    animation: bracketPulse 2s ease-in-out infinite;
+  }
+  .bracket-tl { top:0;left:0;border-width:2px 0 0 2px; }
+  .bracket-tr { top:0;right:0;border-width:2px 2px 0 0; }
+  .bracket-bl { bottom:0;left:0;border-width:0 0 2px 2px; }
+  .bracket-br { bottom:0;right:0;border-width:0 2px 2px 0; }
+  @keyframes bracketPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;box-shadow:0 0 8px var(--cyan-glow);} }
+
+  /* SVG head — exact from test.html */
+  .head-svg {
+    position: absolute; top: 54%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 200px; height: 258px;
+    filter: drop-shadow(0 0 10px rgba(0,212,232,0.25));
+    overflow: visible;
+  }
+
+  /* Scan beam */
+  .scan-line {
+    position: absolute; left: 8px; right: 8px; height: 2px;
+    background: linear-gradient(90deg, transparent 0%, rgba(0,212,232,0.4) 20%, #00d4e8 50%, rgba(0,212,232,0.4) 80%, transparent 100%);
+    box-shadow: 0 0 14px #00d4e8, 0 0 36px rgba(0,212,232,0.4);
+    animation: scanMove 2.4s cubic-bezier(0.4,0,0.6,1) infinite;
+    top: 8px; z-index: 10;
+  }
+  .scan-line::before {
+    content:''; position:absolute; inset:-6px 0 -6px 0;
+    background: linear-gradient(to bottom, transparent, rgba(0,212,232,0.04) 40%, rgba(0,212,232,0.06) 50%, rgba(0,212,232,0.04) 60%, transparent);
+  }
+  @keyframes scanMove { 0%{top:8px;opacity:0;} 5%{opacity:1;} 95%{opacity:1;} 100%{top:calc(100% - 8px);opacity:0;} }
+
+  /* Data points */
+  .data-point {
+    position:absolute; width:5px; height:5px; border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 6px #00d4e8;
+    animation:dotAppear 2.4s ease-in-out infinite;
+  }
+  .data-point::after {
+    content:attr(data-label); position:absolute;
+    left:9px; top:-3px; font-size:8px; letter-spacing:0.08em;
+    color:var(--cyan); white-space:nowrap; opacity:0.8;
+  }
+  @keyframes dotAppear { 0%,30%{opacity:0;transform:scale(0);} 50%,80%{opacity:1;transform:scale(1);} 100%{opacity:0;transform:scale(0);} }
+  .data-point:nth-child(1){animation-delay:0.3s;top:34%;left:28%;}
+  .data-point:nth-child(2){animation-delay:0.6s;top:34%;right:28%;}
+  .data-point:nth-child(3){animation-delay:0.9s;top:53%;left:14%;}
+  .data-point:nth-child(4){animation-delay:1.1s;top:53%;right:14%;}
+  .data-point:nth-child(5){animation-delay:1.4s;top:71%;left:50%;transform:translateX(-50%);}
+  .data-point:nth-child(6){animation-delay:1.7s;top:82%;left:32%;}
+  .data-point:nth-child(7){animation-delay:2.0s;top:82%;right:32%;}
+
+  /* Rotating rings */
+  .ring-svg { position:absolute; inset:-14px; width:calc(100% + 28px); height:calc(100% + 28px); pointer-events:none; }
+  .ring-a { fill:none; stroke:var(--cyan); stroke-width:1; stroke-dasharray:8 12; opacity:0.3; animation:spinRing 8s linear infinite; transform-origin:center; }
+  .ring-b { fill:none; stroke:var(--green); stroke-width:0.5; stroke-dasharray:4 20; opacity:0.2; animation:spinRing 4s linear infinite reverse; transform-origin:center; }
+  @keyframes spinRing { from{stroke-dashoffset:0;} to{stroke-dashoffset:-200;} }
+
+  /* ══════════════════════════════════
+     STATUS BARS  (replace depth/topology/match)
+  ══════════════════════════════════ */
+  .status-bars { display:flex; flex-direction:column; gap:7px; width:230px; }
+  .sbar-row {
+    display:flex; align-items:center; gap:8px;
+    font-size:0.6rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--muted);
+  }
+  .sbar-label { min-width: 68px; }
+  .sbar-track { flex:1; height:2px; background:rgba(0,212,232,0.1); border-radius:2px; overflow:hidden; }
+  .sbar-fill {
+    height:100%; width:0%; border-radius:2px;
+    background:linear-gradient(90deg, #00d4e8, #4af0a0);
+    transition: width 0.5s ease;
+  }
+  .sbar-val { font-size:0.6rem; color:var(--cyan); min-width:28px; text-align:right; }
+
+  /* scan status blink */
+  .scan-status-text {
+    font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase;
+    color:var(--cyan); animation:blink 1.2s step-end infinite; text-align:center;
+  }
+  @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+  /* ══════════════════════════════════
+     UPLOAD STEPS  (compact, under head)
+  ══════════════════════════════════ */
+  .steps-row {
+    display: flex; gap: 10px; width: 100%; justify-content: center;
+  }
+
+  .step-card {
+    flex: 1; max-width: 190px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 10px 10px 8px;
+    transition: border-color 0.3s, opacity 0.3s;
+    cursor: pointer;
+  }
+  .step-card.locked { opacity: 0.35; }
+  .step-card.locked .upload-zone { pointer-events: none; cursor: default; }
+  .step-card.done  { border-color: rgba(74,240,160,0.4); }
+
+  .step-top {
+    display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;
+  }
+  .step-num { font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--cyan); }
+  .step-badge {
+    font-size:0.52rem; letter-spacing:0.1em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--border); padding:1px 5px; border-radius:2px;
+  }
+  .step-badge.ready { color:var(--green); border-color:rgba(74,240,160,0.3); }
+
+  .upload-zone {
+    border:1px dashed rgba(0,212,232,0.2);
+    background:rgba(0,212,232,0.02);
+    border-radius:3px; padding:8px 6px;
+    text-align:center; cursor:pointer;
+    transition:border-color 0.3s, background 0.3s;
+    min-height:48px; display:flex; align-items:center; justify-content:center;
+  }
+  .upload-zone:hover { border-color:var(--cyan); background:rgba(0,212,232,0.05); }
+  .upload-zone span {
+    font-size:0.58rem; letter-spacing:0.08em; text-transform:uppercase;
+    color:var(--muted); line-height:1.5;
+  }
+  .upload-zone span.selected { color:var(--green); }
+  input[type="file"] { display:none; }
+
+  /* ══════════════════════════════════
+     SUBMIT BUTTON
+  ══════════════════════════════════ */
+  .submit-btn {
+    width:100%; padding:10px;
+    background:transparent;
+    border:1px solid var(--cyan);
+    color:var(--cyan); font-family:var(--font);
+    font-size:0.68rem; letter-spacing:0.18em; text-transform:uppercase;
+    cursor:pointer; border-radius:3px;
+    transition:background 0.2s, box-shadow 0.2s;
+  }
+  .submit-btn:hover:not(:disabled) { background:rgba(0,212,232,0.07); box-shadow:0 0 14px rgba(0,212,232,0.15); }
+  .submit-btn:disabled { border-color:#1e2535; color:#2a3555; cursor:not-allowed; }
+
+  /* ══════════════════════════════════
+     CONSOLE LOG
+  ══════════════════════════════════ */
+  .console-log {
+    width:100%;
+    background:rgba(0,0,0,0.35);
+    border:1px solid rgba(0,212,232,0.08);
+    border-radius:3px; padding:10px;
+    font-size:0.6rem; line-height:1.9;
+    display:none; white-space:pre-wrap;
+    max-height:100px; overflow-y:auto;
+    letter-spacing:0.04em;
+  }
+  .l-info  { color:var(--cyan); }
+  .l-ok    { color:var(--green); }
+  .l-error { color:#ff6b8a; }
+  .l-poll  { color:#4a5070; }
+</style>
 </head>
 <body>
 
-<div class="container" id="hub-container">
-    <h2>Verification Portal</h2>
-    <p>Submit identity documentation to initiate the asynchronous verification pipeline.</p>
-    
-    <div class="step-container" id="step-1-wrapper">
-        <div class="step-title">
-            <span>Step 1: Government-Issued ID</span>
-            <span class="step-status" id="id-status-badge">Required</span>
-        </div>
-        <div class="upload-box" id="id-drop-zone">
-            <span id="id-label">Upload Government Identification Document</span>
-            <input type="file" id="id-input" accept="image/png, image/jpeg">
-        </div>
+<div class="app">
+
+  <div class="page-title">&#9632; Identity Verification Hub &#9632;</div>
+
+  <div class="scan-section">
+
+    <div class="head-container">
+      <div class="bracket bracket-tl"></div>
+      <div class="bracket bracket-tr"></div>
+      <div class="bracket bracket-bl"></div>
+      <div class="bracket bracket-br"></div>
+
+      <svg class="ring-svg" viewBox="0 0 258 318" xmlns="http://www.w3.org/2000/svg">
+        <ellipse class="ring-a" cx="129" cy="159" rx="125" ry="153"/>
+        <ellipse class="ring-b" cx="129" cy="159" rx="115" ry="143"/>
+      </svg>
+
+      <svg class="head-svg" viewBox="0 0 210 270" xmlns="http://www.w3.org/2000/svg" fill="none">
+        <defs>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="2" result="blur"/>
+            <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+          </filter>
+          <linearGradient id="headGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#00d4e8" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#00d4e8" stop-opacity="0.4"/>
+          </linearGradient>
+          <clipPath id="faceClip">
+            <path d="M105,8 C65,8 32,38 28,78 C24,110 30,138 42,158 C50,172 54,185 56,198 C62,208 75,215 90,215 L105,217 L120,215 C135,215 148,208 154,198 C156,185 160,172 168,158 C180,138 186,110 182,78 C178,38 145,8 105,8 Z"/>
+          </clipPath>
+        </defs>
+        <g transform="translate(105,135) scale(1.18) translate(-105,-112.5)">
+          <path d="M105,8 C65,8 32,38 28,78 C24,110 30,138 42,158 C50,172 54,185 56,198 C62,208 75,215 90,215 L105,217 L120,215 C135,215 148,208 154,198 C156,185 160,172 168,158 C180,138 186,110 182,78 C178,38 145,8 105,8 Z"
+                stroke="url(#headGrad)" stroke-width="2" stroke-linejoin="round" filter="url(#glow)"/>
+          <g clip-path="url(#faceClip)" stroke="#00d4e8" stroke-width="0.8" opacity="0.45" fill="none">
+            <path d="M105,0 L105,255" opacity="0.7"/>
+            <path d="M105,-20 Q60,110 105,255"/>
+            <path d="M105,-20 Q10,110 105,255"/>
+            <path d="M105,-20 Q-40,110 105,255"/>
+            <path d="M105,-20 Q150,110 105,255"/>
+            <path d="M105,-20 Q200,110 105,255"/>
+            <path d="M105,-20 Q250,110 105,255"/>
+            <path d="M0,15 Q105,35 210,15"/>
+            <path d="M0,40 Q105,65 210,40"/>
+            <path d="M0,65 Q105,95 210,65"/>
+            <path d="M0,90 Q105,125 210,90"/>
+            <path d="M0,115 Q105,155 210,115"/>
+            <path d="M0,140 Q105,185 210,140"/>
+            <path d="M0,165 Q105,215 210,165"/>
+            <path d="M0,190 Q105,245 210,190"/>
+            <path d="M0,215 Q105,275 210,215"/>
+          </g>
+          <path d="M29,100 Q20,104 20,118 Q20,132 29,136 Q34,132 34,118 Q34,104 29,100 Z" stroke="#00d4e8" stroke-width="1.2" opacity="0.6"/>
+          <path d="M181,100 Q190,104 190,118 Q190,132 181,136 Q176,132 176,118 Q176,104 181,100 Z" stroke="#00d4e8" stroke-width="1.2" opacity="0.6"/>
+          <line x1="24" y1="90"  x2="30" y2="90"  stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+          <line x1="24" y1="120" x2="30" y2="120" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+          <line x1="24" y1="150" x2="30" y2="150" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+          <line x1="180" y1="90"  x2="186" y2="90"  stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+          <line x1="180" y1="120" x2="186" y2="120" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+          <line x1="180" y1="150" x2="186" y2="150" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
+        </g>
+      </svg>
+
+      <div class="scan-line"></div>
+      <div class="data-point" data-label="NODE-1"></div>
+      <div class="data-point" data-label="NODE-2"></div>
+      <div class="data-point" data-label=""></div>
+      <div class="data-point" data-label=""></div>
+      <div class="data-point" data-label="NODE-3"></div>
+      <div class="data-point" data-label=""></div>
+      <div class="data-point" data-label=""></div>
     </div>
 
-    <div class="step-container disabled-step" id="step-2-wrapper">
-        <div class="step-title">
-            <span>Step 2: Profile Selfie Scan</span>
-            <span class="step-status" id="selfie-status-badge">Locked</span>
-        </div>
-        <div class="upload-box" id="selfie-drop-zone">
-            <span id="selfie-label">Select Face Profile Asset</span>
-            <input type="file" id="selfie-input" accept="image/png, image/jpeg">
-        </div>
+    <div class="status-bars">
+      <div class="sbar-row">
+        <span class="sbar-label" id="bar1Label">ID UPLOAD</span>
+        <div class="sbar-track"><div class="sbar-fill" id="bar1Fill"></div></div>
+        <span class="sbar-val" id="bar1Val">—</span>
+      </div>
+      <div class="sbar-row">
+        <span class="sbar-label" id="bar2Label">SELFIE SCAN</span>
+        <div class="sbar-track"><div class="sbar-fill" id="bar2Fill"></div></div>
+        <span class="sbar-val" id="bar2Val">—</span>
+      </div>
+      <div class="sbar-row">
+        <span class="sbar-label" id="bar3Label">MATCH SCORE</span>
+        <div class="sbar-track"><div class="sbar-fill" id="bar3Fill"></div></div>
+        <span class="sbar-val" id="bar3Val">—</span>
+      </div>
     </div>
 
-    <button id="submit-btn" disabled>Submit Verification Assets</button>
-    
-    <div class="status-panel" id="console-output"></div>
-</div>
+    <div class="scan-status-text" id="scanStatusText">AWAITING ASSETS...</div>
 
-<script>
-    // --- SECURITY CONFIGURATION ---
-    // Replace these values with your actual deployment details
-    const API_URL = "YOUR_API_GATEWAY_URL_HERE";
-    const SESSION_TOKEN = "YOUR_SECURE_TOKEN_HERE";
-    // ------------------------------
+  </div><div class="steps-row">
 
-    const idInput = document.getElementById('id-input');
-    const idLabel = document.getElementById('id-label');
-    const idStatusBadge = document.getElementById('id-status-badge');
-    const idDropZone = document.getElementById('id-drop-zone');
-    
-    const selfieWrapper = document.getElementById('step-2-wrapper');
-    const selfieInput = document.getElementById('selfie-input');
-    const selfieLabel = document.getElementById('selfie-label');
-    const selfieStatusBadge = document.getElementById('selfie-status-badge');
-    const selfieDropZone = document.getElementById('selfie-drop-zone');
-    
-    const submitBtn = document.getElementById('submit-btn');
-    const consoleOutput = document.getElementById('console-output');
-    const hubContainer = document.getElementById('hub-container');
+    <div class="step-card" id="step1Card">
+      <div class="step-top">
+        <span class="step-num">Step 01</span>
+        <span class="step-badge" id="badge1">Required</span>
+      </div>
+      <label class="upload-zone" id="zone1">
+        <span id="label1">Gov't-Issued ID</span>
+        <input type="file" id="input1" accept="image/png,image/jpeg" style="display:none">
+      </label>
+    </div>
 
-    let idBase64 = null;
-    let selfieBase64 = null;
+    <div class="step-card locked" id="step2Card">
+      <div class="step-top">
+        <span class="step-num">Step 02</span>
+        <span class="step-badge" id="badge2">Locked</span>
+      </div>
+      <label class="upload-zone" id="zone2">
+        <span id="label2">Profile Selfie</span>
+        <input type="file" id="input2" accept="image/png,image/jpeg" style="display:none">
+      </label>
+    </div>
 
-    idDropZone.addEventListener('click', () => idInput.click());
-    selfieDropZone.addEventListener('click', () => selfieInput.click());
+  </div>
 
-    const convertToBase64 = (file) => new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = (error) => reject(error);
-    });
+  <button class="submit-btn" id="submitBtn" disabled>Initiate Verification Pipeline</button>
 
-    idInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            idLabel.textContent = `Selected ID: ${file.name}`;
-            idStatusBadge.textContent = "Ready";
-            idStatusBadge.style.color = "#f5a623";
-            selfieWrapper.classList.remove('disabled-step');
-            selfieStatusBadge.textContent = "Required";
-            idBase64 = await convertToBase64(file);
-        }
-    });
+  <div class="console-log" id="consoleLog"></div>
 
-    selfieInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            selfieLabel.textContent = `Selected Selfie: ${file.name}`;
-            selfieStatusBadge.textContent = "Ready";
-            selfieStatusBadge.style.color = "#f5a623";
-            submitBtn.disabled = false;
-            selfieBase64 = await convertToBase64(file);
-        }
-    });
+</div><script>
+  // --- CONFIG ---
+  const API_URL = "YOUR_API_GATEWAY_URL_HERE";
+  const SESSION_TOKEN = "YOUR_SECURE_TOKEN_HERE";
+  // --------------
 
-    submitBtn.addEventListener('click', async () => {
-        submitBtn.disabled = true;
-        submitBtn.textContent = "Processing...";
-        consoleOutput.style.display = "block";
-        consoleOutput.textContent = "[INFO] Initializing structured data uploads...\n";
+  const input1    = document.getElementById('input1');
+  const label1    = document.getElementById('label1');
+  const badge1    = document.getElementById('badge1');
+  const zone1     = document.getElementById('zone1');
+  const step2Card = document.getElementById('step2Card');
+  const input2    = document.getElementById('input2');
+  const label2    = document.getElementById('label2');
+  const badge2    = document.getElementById('badge2');
+  const zone2     = document.getElementById('zone2');
+  const submitBtn = document.getElementById('submitBtn');
+  const consolEl  = document.getElementById('consoleLog');
 
-        const dynamicUserId = `user_${Date.now()}`;
+  const bar1Fill  = document.getElementById('bar1Fill');
+  const bar2Fill  = document.getElementById('bar2Fill');
+  const bar3Fill  = document.getElementById('bar3Fill');
+  const bar1Val   = document.getElementById('bar1Val');
+  const bar2Val   = document.getElementById('bar2Val');
+  const bar3Val   = document.getElementById('bar3Val');
+  const bar1Label = document.getElementById('bar1Label');
+  const bar2Label = document.getElementById('bar2Label');
+  const bar3Label = document.getElementById('bar3Label');
+  const scanTxt   = document.getElementById('scanStatusText');
 
+  let b64ID = null, b64Selfie = null;
+
+  // File inputs triggered natively via <label for="...">
+
+  const toB64 = f => new Promise((res,rej)=>{const r=new FileReader();r.readAsDataURL(f);r.onload=()=>res(r.result);r.onerror=rej;});
+
+  input1.addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    label1.textContent = f.name; label1.classList.add('selected');
+    badge1.textContent = 'Ready'; badge1.classList.add('ready');
+    step2Card.classList.remove('locked');
+    badge2.textContent = 'Required';
+    b64ID = await toB64(f);
+    setBar(1, 'ID LOADED', 100, '100%', '#4af0a0');
+  });
+
+  input2.addEventListener('change', async e => {
+    const f = e.target.files[0]; if (!f) return;
+    label2.textContent = f.name; label2.classList.add('selected');
+    badge2.textContent = 'Ready'; badge2.classList.add('ready');
+    submitBtn.disabled = false;
+    b64Selfie = await toB64(f);
+    setBar(2, 'SELFIE LOADED', 100, '100%', '#4af0a0');
+    setScanText('READY TO SCAN', '#00d4e8');
+  });
+
+  function setBar(n, label, pct, valText, color) {
+    const fills = [bar1Fill, bar2Fill, bar3Fill];
+    const vals  = [bar1Val,  bar2Val,  bar3Val];
+    const labs  = [bar1Label,bar2Label,bar3Label];
+    fills[n-1].style.width = pct + '%';
+    fills[n-1].style.background = color || 'linear-gradient(90deg,#00d4e8,#4af0a0)';
+    vals[n-1].textContent = valText;
+    if (label) labs[n-1].textContent = label;
+  }
+
+  function animBar(n, label, targetPct, duration) {
+    const fills = [bar1Fill, bar2Fill, bar3Fill];
+    const vals  = [bar1Val,  bar2Val,  bar3Val];
+    const labs  = [bar1Label,bar2Label,bar3Label];
+    if (label) labs[n-1].textContent = label;
+    let cur = 0;
+    const step = targetPct / (duration / 30);
+    const iv = setInterval(() => {
+      cur = Math.min(cur + step, targetPct);
+      fills[n-1].style.width = cur + '%';
+      vals[n-1].textContent = Math.round(cur) + '%';
+      if (cur >= targetPct) clearInterval(iv);
+    }, 30);
+  }
+
+  function setScanText(txt, color, noBlink) {
+    scanTxt.textContent = txt;
+    scanTxt.style.color = color || '#00d4e8';
+    scanTxt.style.animation = noBlink ? 'none' : 'blink 1.2s step-end infinite';
+    scanTxt.style.opacity = '1';
+  }
+
+  function log(msg, type) {
+    consolEl.style.display = 'block';
+    const sp = document.createElement('span');
+    sp.className = 'l-' + (type||'info');
+    sp.textContent = msg + '\n';
+    consolEl.appendChild(sp);
+    consolEl.scrollTop = consolEl.scrollHeight;
+  }
+
+  submitBtn.addEventListener('click', async () => {
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Pipeline Active...';
+    consolEl.innerHTML = '';
+
+    // Reset bars for pipeline
+    setBar(1, 'INITIALIZING', 0, '—');
+    setBar(2, 'SELFIE SCAN', 0, '—');
+    setBar(3, 'MATCH SCORE', 0, '—');
+    setScanText('INITIALIZING...', '#00d4e8');
+
+    log('[INIT] Uploading assets to pipeline...', 'info');
+    animBar(1, 'INITIALIZING', 15, 600);
+
+    const uid = 'user_' + Date.now();
+    try {
+      // Upload ID
+      setScanText('UPLOADING ID...', '#00d4e8');
+      animBar(1, 'ID UPLOAD', 60, 800);
+      log('[UPLOAD] Sending ID document...', 'info');
+
+      const r1 = await fetch(API_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action:'UPLOAD_ID', session_token:SESSION_TOKEN, user_id:uid, id_image_base64:b64ID})
+      });
+      if (!r1.ok) throw new Error('ID upload failed');
+      animBar(1, 'ID UPLOAD', 100, 300);
+      log('[OK] ID document accepted.', 'ok');
+
+      // Upload Selfie
+      setScanText('UPLOADING SELFIE...', '#00d4e8');
+      animBar(2, 'SELFIE UPLOAD', 60, 800);
+      log('[UPLOAD] Sending selfie asset...', 'info');
+
+      const r2 = await fetch(API_URL, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({action:'UPLOAD', session_token:SESSION_TOKEN, user_id:uid, selfie_image_base64:b64Selfie})
+      });
+      if (!r2.ok) throw new Error('Selfie upload failed');
+      animBar(2, 'SELFIE UPLOAD', 100, 300);
+      log('[OK] Selfie asset accepted. Initiating scan...', 'ok');
+
+      // Polling
+      setScanText('SCANNING...', '#00d4e8');
+      animBar(3, 'MATCH SCORE', 20, 1000);
+      let attempts = 0;
+
+      const poll = setInterval(async () => {
+        attempts++;
         try {
-            // Upload Logic
-            const idResponse = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "UPLOAD_ID", session_token: SESSION_TOKEN, user_id: dynamicUserId, id_image_base64: idBase64 })
-            });
-            if (!idResponse.ok) throw new Error("Upload failed");
-            
-            const selfieResponse = await fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "UPLOAD", session_token: SESSION_TOKEN, user_id: dynamicUserId, selfie_image_base64: selfieBase64 })
-            });
-            if (!selfieResponse.ok) throw new Error("Selfie failed");
+          const rp = await fetch(API_URL, {
+            method:'POST', headers:{'Content-Type':'application/json'},
+            body: JSON.stringify({action:'STATUS', session_token:SESSION_TOKEN, user_id:uid})
+          });
+          const data = await rp.json();
+          const status = data.status || '';
+          log('[POLL] Status: ' + status, 'poll');
 
-            // Polling Logic
-            let pollAttempts = 0;
-            const pollInterval = setInterval(async () => {
-                pollAttempts++;
-                try {
-                    const res = await fetch(API_URL, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ action: "STATUS", session_token: SESSION_TOKEN, user_id: dynamicUserId })
-                    });
-                    const data = await res.json();
-                    const status = data.status || "";
+          // Grow match bar each poll attempt
+          const pollPct = Math.min(20 + attempts * 10, 90);
+          animBar(3, 'MATCH SCORE', pollPct, 400);
+          setScanText('VERIFYING... ' + pollPct + '%', '#00d4e8');
 
-                    consoleOutput.textContent += `[POLL] Status: ${status}...\n`;
+          if (status === 'VERIFIED') {
+            clearInterval(poll);
+            animBar(3, 'MATCH SCORE', 100, 400);
+            setTimeout(()=>{
+              setScanText('VERIFIED', '#4af0a0', true);
+              bar3Fill.style.background = '#4af0a0';
+              bar3Val.style.color = '#4af0a0';
+            }, 450);
+            log('[SUCCESS] Biometric verification complete.', 'ok');
+            submitBtn.textContent = 'Verified ✓';
+          } else if (attempts >= 10) {
+            clearInterval(poll);
+            setScanText('TIMEOUT', '#ff6b8a', true);
+            animBar(3, 'TIMEOUT', 100, 300);
+            bar3Fill.style.background = '#ff6b8a';
+            log('[ERROR] Verification timed out.', 'error');
+          }
+        } catch(e) { console.error(e); }
+      }, 3000);
 
-                    if (status === "VERIFIED") {
-                        clearInterval(pollInterval);
-                        consoleOutput.textContent += "[SUCCESS] Verification Complete.";
-                        submitBtn.textContent = "Complete";
-                    } else if (pollAttempts >= 10) {
-                        clearInterval(pollInterval);
-                        consoleOutput.textContent += "[ERROR] Timeout.";
-                    }
-                } catch (e) { console.error(e); }
-            }, 3000);
-
-        } catch (error) {
-            consoleOutput.textContent += `[ERROR] ${error.message}`;
-            submitBtn.disabled = false;
-        }
-    });
+    } catch(err) {
+      setScanText('FAILED', '#ff6b8a', true);
+      log('[ERROR] ' + err.message, 'error');
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Retry Pipeline';
+    }
+  });
 </script>
 </body>
 </html>
