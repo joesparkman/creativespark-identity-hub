@@ -9,6 +9,5 @@ __pycache__/
 .DS_Store
 Thumbs.db
 
-config.js
 
 secrets.py
