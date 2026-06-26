@@ -27,23 +27,47 @@ Resources:
       FunctionName: creativespark-upload-service
       CodeUri: upload_subservice/
       Handler: app.lambda_handler
-      Runtime: python3.11
+      Runtime: python3.13
+      Timeout: 30
+      # Permissions for uploading files, writing to DB, and calling the worker
+      Policies:
+        - S3WritePolicy:
+            BucketName: !Ref IdentityStorageBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdentityUsersTable
+        - LambdaInvokePolicy:
+            FunctionName: creativespark-verify-service
       Environment:
         Variables:
           S3_BUCKET_NAME: !Ref IdentityStorageBucket
           DYNAMODB_TABLE_NAME: !Ref IdentityUsersTable
           AUTH_TOKEN: "SET_IN_AWS_CONSOLE"
           VERIFY_WORKER_FUNCTION: !Ref VerifyWorkerFunction
+      # This fixes the 405 Method Not Allowed error
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
 
-  # 4. Worker Lambda (The Biometric Matcher)
+# 4. Worker Lambda (The Biometric Matcher)
   VerifyWorkerFunction:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: creativespark-verify-service
       CodeUri: creativespark_verify_worker/
       Handler: app.lambda_handler
-      Runtime: python3.11
+      Runtime: python3.13
+      # Permissions for reading images and calling Rekognition
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref IdentityStorageBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IdentityUsersTable
+        # FIX: Just pass the managed policy name as a string
+        - AmazonRekognitionReadOnlyAccess
       Environment:
         Variables:
           S3_BUCKET_NAME: !Ref IdentityStorageBucket
-          DYNAMODB_TABLE_NAME: !Ref IdentityUsersTabl
+          DYNAMODB_TABLE_NAME: !Ref IdentityUsersTable

@@ -1,0 +1,74 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: CreativeSpark Biometric Identity Verification Pipeline
+Resources:
+  IdentityStorageBucket:
+    Type: AWS::S3::Bucket
+  IdentityUsersTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: creativespark-onboarding-users
+      AttributeDefinitions:
+      - AttributeName: UserId
+        AttributeType: S
+      KeySchema:
+      - AttributeName: UserId
+        KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+  UploadRouterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: creativespark-upload-service
+      CodeUri: UploadRouterFunction
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Timeout: 30
+      Policies:
+      - S3WritePolicy:
+          BucketName:
+            Ref: IdentityStorageBucket
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: IdentityUsersTable
+      - LambdaInvokePolicy:
+          FunctionName: creativespark-verify-service
+      Environment:
+        Variables:
+          S3_BUCKET_NAME:
+            Ref: IdentityStorageBucket
+          DYNAMODB_TABLE_NAME:
+            Ref: IdentityUsersTable
+          AUTH_TOKEN: SET_IN_AWS_CONSOLE
+          VERIFY_WORKER_FUNCTION:
+            Ref: VerifyWorkerFunction
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            Path: /upload
+            Method: post
+    Metadata:
+      SamResourceId: UploadRouterFunction
+  VerifyWorkerFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: creativespark-verify-service
+      CodeUri: VerifyWorkerFunction
+      Handler: app.lambda_handler
+      Runtime: python3.13
+      Policies:
+      - S3ReadPolicy:
+          BucketName:
+            Ref: IdentityStorageBucket
+      - DynamoDBCrudPolicy:
+          TableName:
+            Ref: IdentityUsersTable
+      - AmazonRekognitionReadOnlyAccess
+      Environment:
+        Variables:
+          S3_BUCKET_NAME:
+            Ref: IdentityStorageBucket
+          DYNAMODB_TABLE_NAME:
+            Ref: IdentityUsersTable
+    Metadata:
+      SamResourceId: VerifyWorkerFunction

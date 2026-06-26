@@ -352,10 +352,15 @@
 
   <div class="console-log" id="consoleLog"></div>
 
-</div><script>
+</div>
+
+<script src="config.js"></script>
+
+<script>
   // --- CONFIG ---
-  const API_URL = "YOUR_API_GATEWAY_URL_HERE";
-  const SESSION_TOKEN = "YOUR_SECURE_TOKEN_HERE";
+  // Using window.APP_CONFIG.API_URL defined in config.js
+  const API_URL = window.APP_CONFIG.API_URL;
+  const SESSION_TOKEN = "spark-token-authorized-2026";
   // --------------
 
   const input1    = document.getElementById('input1');
@@ -383,13 +388,20 @@
 
   let b64ID = null, b64Selfie = null;
 
-  // File inputs triggered natively via <label for="...">
-
   const toB64 = f => new Promise((res,rej)=>{const r=new FileReader();r.readAsDataURL(f);r.onload=()=>res(r.result);r.onerror=rej;});
+
+  // Function to truncate long filenames gracefully
+  function formatName(name) {
+    if (name.length > 20) {
+      return name.substring(0, 10) + '...' + name.substring(name.length - 6);
+    }
+    return name;
+  }
 
   input1.addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
-    label1.textContent = f.name; label1.classList.add('selected');
+    label1.textContent = formatName(f.name); 
+    label1.classList.add('selected');
     badge1.textContent = 'Ready'; badge1.classList.add('ready');
     step2Card.classList.remove('locked');
     badge2.textContent = 'Required';
@@ -399,7 +411,8 @@
 
   input2.addEventListener('change', async e => {
     const f = e.target.files[0]; if (!f) return;
-    label2.textContent = f.name; label2.classList.add('selected');
+    label2.textContent = formatName(f.name); 
+    label2.classList.add('selected');
     badge2.textContent = 'Ready'; badge2.classList.add('ready');
     submitBtn.disabled = false;
     b64Selfie = await toB64(f);
@@ -469,7 +482,7 @@
       animBar(1, 'ID UPLOAD', 60, 800);
       log('[UPLOAD] Sending ID document...', 'info');
 
-      const r1 = await fetch(API_URL, {
+      const r1 = await fetch(`${API_URL}/upload`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({action:'UPLOAD_ID', session_token:SESSION_TOKEN, user_id:uid, id_image_base64:b64ID})
       });
@@ -482,7 +495,7 @@
       animBar(2, 'SELFIE UPLOAD', 60, 800);
       log('[UPLOAD] Sending selfie asset...', 'info');
 
-      const r2 = await fetch(API_URL, {
+      const r2 = await fetch(`${API_URL}/upload`, {
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({action:'UPLOAD', session_token:SESSION_TOKEN, user_id:uid, selfie_image_base64:b64Selfie})
       });
@@ -498,18 +511,13 @@
       const poll = setInterval(async () => {
         attempts++;
         try {
-          const rp = await fetch(API_URL, {
+          const rp = await fetch(`${API_URL}/upload`, {
             method:'POST', headers:{'Content-Type':'application/json'},
             body: JSON.stringify({action:'STATUS', session_token:SESSION_TOKEN, user_id:uid})
           });
           const data = await rp.json();
           const status = data.status || '';
           log('[POLL] Status: ' + status, 'poll');
-
-          // Grow match bar each poll attempt
-          const pollPct = Math.min(20 + attempts * 10, 90);
-          animBar(3, 'MATCH SCORE', pollPct, 400);
-          setScanText('VERIFYING... ' + pollPct + '%', '#00d4e8');
 
           if (status === 'VERIFIED') {
             clearInterval(poll);
@@ -521,12 +529,34 @@
             }, 450);
             log('[SUCCESS] Biometric verification complete.', 'ok');
             submitBtn.textContent = 'Verified ✓';
+            
+          } else if (status === 'REJECTED') {
+            // NEW: Handle the rejection explicitly
+            clearInterval(poll);
+            animBar(3, 'REJECTED', 100, 300);
+            setTimeout(()=>{
+              setScanText('VERIFICATION FAILED', '#ff6b8a', true);
+              bar3Fill.style.background = '#ff6b8a';
+              bar3Val.style.color = '#ff6b8a';
+            }, 350);
+            log('[ERROR] Biometrics do not match.', 'error');
+            submitBtn.textContent = 'Retry Pipeline';
+            submitBtn.disabled = false;
+
           } else if (attempts >= 10) {
             clearInterval(poll);
             setScanText('TIMEOUT', '#ff6b8a', true);
             animBar(3, 'TIMEOUT', 100, 300);
             bar3Fill.style.background = '#ff6b8a';
             log('[ERROR] Verification timed out.', 'error');
+            submitBtn.textContent = 'Retry Pipeline';
+            submitBtn.disabled = false;
+            
+          } else {
+            // Grow match bar each poll attempt if still pending
+            const pollPct = Math.min(20 + attempts * 10, 90);
+            animBar(3, 'MATCH SCORE', pollPct, 400);
+            setScanText('VERIFYING... ' + pollPct + '%', '#00d4e8');
           }
         } catch(e) { console.error(e); }
       }, 3000);

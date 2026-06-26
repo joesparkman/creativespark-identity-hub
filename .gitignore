@@ -8,3 +8,5 @@ __pycache__/
 # System files (Mac/Windows junk)
 .DS_Store
 Thumbs.db
+
+config.js
