@@ -10,3 +10,5 @@ __pycache__/
 Thumbs.db
 
 config.js
+
+secrets.py
