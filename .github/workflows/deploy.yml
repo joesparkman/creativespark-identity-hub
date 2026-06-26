@@ -20,6 +20,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: us-east-1
 
-    - name: Sync Frontend to Subdomain S3 Bucket
+    - name: Sync Frontend to Biometric Subfolder
       run: |
-        aws s3 sync . s3://app.joesparkman.com --region us-east-2 --delete --exclude ".git/*" --exclude ".github/*"
+        aws s3 sync frontend/ s3://app.joesparkman.com/biometric --region us-east-2 --delete --exclude ".git/*" --exclude ".github/*"
