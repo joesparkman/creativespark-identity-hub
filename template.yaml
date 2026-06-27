@@ -12,7 +12,7 @@ Globals:
       Variables:
         S3_BUCKET_NAME: !Ref ImageBucket
         DYNAMODB_TABLE_NAME: !Ref VerificationTable
-        VERIFY_WORKER_FUNCTION: !Ref VerifyWorkerFunction
+        VERIFY_WORKER_FUNCTION: cs-verify-worker
         AUTH_TOKEN_SECRET_ARN: !Ref AuthTokenSecret
   Api:
     TracingEnabled: true
@@ -70,6 +70,7 @@ Resources:
   UploadSubserviceFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: cs-upload-subservice
       CodeUri: upload_subservice/
       Handler: app.lambda_handler
       Policies:
@@ -80,7 +81,7 @@ Resources:
         - AWSSecretsManagerGetSecretValuePolicy:
             SecretArn: !Ref AuthTokenSecret
         - LambdaInvokePolicy:
-            FunctionName: !Ref VerifyWorkerFunction
+            FunctionName: cs-verify-worker
       Events:
         UploadImage:
           Type: Api
@@ -93,6 +94,7 @@ Resources:
   VerifyWorkerFunction:
     Type: AWS::Serverless::Function
     Properties:
+      FunctionName: cs-verify-worker
       CodeUri: creativespark_verify_worker/
       Handler: app.lambda_handler
       Policies:
