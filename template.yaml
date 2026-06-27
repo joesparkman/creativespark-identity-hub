@@ -1,29 +1,86 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: CreativeSpark Identity Hub - Asynchronous Biometric Verification App
+Description: CreativeSpark Identity Hub - Biometric Verification App
 
 Globals:
   Function:
     Timeout: 30
     Runtime: python3.13
     MemorySize: 128
+    Tracing: Active
+    Environment:
+      Variables:
+        S3_BUCKET_NAME: !Ref ImageBucket
+        DYNAMODB_TABLE_NAME: !Ref VerificationTable
+        VERIFY_WORKER_FUNCTION: !Ref VerifyWorkerFunction
+        AUTH_TOKEN_SECRET_ARN: !Ref AuthTokenSecret
   Api:
+    TracingEnabled: true
     Cors:
       AllowMethods: "'POST,GET,OPTIONS'"
-      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowHeaders: "'Content-Type,Authorization'"
       AllowOrigin: "'https://app.joesparkman.com'"
 
 Resources:
+
+  # --- S3 Bucket for images ---
+  ImageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  # --- DynamoDB Table ---
+  VerificationTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: creativespark-onboarding-users
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: UserId
+          AttributeType: S
+      KeySchema:
+        - AttributeName: UserId
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+
+  # --- Secrets Manager for Auth Token ---
+  AuthTokenSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: creativespark/auth-token
+      Description: Auth token for CreativeSpark Identity Hub
+
+  # --- API Gateway ---
   IdentityHubApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
 
+  # --- Upload Subservice Lambda ---
   UploadSubserviceFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: upload_subservice/
       Handler: app.lambda_handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref ImageBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VerificationTable
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: !Ref AuthTokenSecret
+        - LambdaInvokePolicy:
+            FunctionName: !Ref VerifyWorkerFunction
       Events:
         UploadImage:
           Type: Api
@@ -32,20 +89,23 @@ Resources:
             Method: post
             RestApiId: !Ref IdentityHubApi
 
+  # --- Verify Worker Lambda ---
   VerifyWorkerFunction:
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: creativespark_verify_worker/
       Handler: app.lambda_handler
-      Events:
-        VerifyBiometric:
-          Type: Api
-          Properties:
-            Path: /verify
-            Method: post
-            RestApiId: !Ref IdentityHubApi
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref ImageBucket
+        - DynamoDBCrudPolicy:
+            TableName: !Ref VerificationTable
+        - RekognitionDetectOnlyPolicy: {}
 
 Outputs:
   ApiEndpoint:
     Description: "API Gateway Base URL"
     Value: !Sub "https://${IdentityHubApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/"
+  ImageBucketName:
+    Description: "S3 Bucket for images"
+    Value: !Ref ImageBucket

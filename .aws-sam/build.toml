@@ -7,7 +7,7 @@ architecture = "x86_64"
 handler = "app.lambda_handler"
 manifest_hash = ""
 packagetype = "Zip"
-functions = ["UploadRouterFunction"]
+functions = ["UploadSubserviceFunction"]
 
 [function_build_definitions.506dd644-db02-47c2-bd18-9524585150ec]
 codeuri = "C:\\Users\\jojob\\Downloads\\creativespark-identity-hub-clean\\creativespark_verify_worker"

@@ -1,74 +1,53 @@
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.13
+    MemorySize: 128
+  Api:
+    Cors:
+      AllowMethods: '''POST,GET,OPTIONS'''
+      AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+      AllowOrigin: '''https://app.joesparkman.com'''
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: CreativeSpark Biometric Identity Verification Pipeline
+Description: CreativeSpark Identity Hub - Asynchronous Biometric Verification App
 Resources:
-  IdentityStorageBucket:
-    Type: AWS::S3::Bucket
-  IdentityUsersTable:
-    Type: AWS::DynamoDB::Table
+  IdentityHubApi:
+    Type: AWS::Serverless::Api
     Properties:
-      TableName: creativespark-onboarding-users
-      AttributeDefinitions:
-      - AttributeName: UserId
-        AttributeType: S
-      KeySchema:
-      - AttributeName: UserId
-        KeyType: HASH
-      BillingMode: PAY_PER_REQUEST
-  UploadRouterFunction:
+      StageName: Prod
+  UploadSubserviceFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: creativespark-upload-service
-      CodeUri: UploadRouterFunction
+      CodeUri: UploadSubserviceFunction
       Handler: app.lambda_handler
-      Runtime: python3.13
-      Timeout: 30
-      Policies:
-      - S3WritePolicy:
-          BucketName:
-            Ref: IdentityStorageBucket
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: IdentityUsersTable
-      - LambdaInvokePolicy:
-          FunctionName: creativespark-verify-service
-      Environment:
-        Variables:
-          S3_BUCKET_NAME:
-            Ref: IdentityStorageBucket
-          DYNAMODB_TABLE_NAME:
-            Ref: IdentityUsersTable
-          AUTH_TOKEN: SET_IN_AWS_CONSOLE
-          VERIFY_WORKER_FUNCTION:
-            Ref: VerifyWorkerFunction
       Events:
-        UploadApi:
+        UploadImage:
           Type: Api
           Properties:
             Path: /upload
             Method: post
+            RestApiId:
+              Ref: IdentityHubApi
     Metadata:
-      SamResourceId: UploadRouterFunction
+      SamResourceId: UploadSubserviceFunction
   VerifyWorkerFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: creativespark-verify-service
       CodeUri: VerifyWorkerFunction
       Handler: app.lambda_handler
-      Runtime: python3.13
-      Policies:
-      - S3ReadPolicy:
-          BucketName:
-            Ref: IdentityStorageBucket
-      - DynamoDBCrudPolicy:
-          TableName:
-            Ref: IdentityUsersTable
-      - AmazonRekognitionReadOnlyAccess
-      Environment:
-        Variables:
-          S3_BUCKET_NAME:
-            Ref: IdentityStorageBucket
-          DYNAMODB_TABLE_NAME:
-            Ref: IdentityUsersTable
+      Events:
+        VerifyBiometric:
+          Type: Api
+          Properties:
+            Path: /verify
+            Method: post
+            RestApiId:
+              Ref: IdentityHubApi
     Metadata:
       SamResourceId: VerifyWorkerFunction
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway Base URL
+    Value:
+      Fn::Sub: https://${IdentityHubApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
