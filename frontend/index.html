@@ -32,7 +32,6 @@
     padding: 16px 12px 24px;
   }
 
-  /* Grid bg */
   body::before {
     content: '';
     position: fixed; inset: 0;
@@ -45,15 +44,11 @@
 
   .app { position: relative; z-index: 1; width: 100%; max-width: 420px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
 
-  /* ── Page title ── */
   .page-title {
     font-size: 0.72rem; letter-spacing: 0.28em; text-transform: uppercase;
     color: var(--cyan); opacity: 0.9; text-align: center;
   }
 
-  /* ══════════════════════════════════
-     HEAD SCAN SECTION
-  ══════════════════════════════════ */
   .scan-section { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
 
   .head-container {
@@ -62,7 +57,6 @@
     flex-shrink: 0;
   }
 
-  /* Corner brackets */
   .bracket {
     position: absolute; width: 22px; height: 22px;
     border-color: var(--cyan); border-style: solid; opacity: 0.8;
@@ -74,7 +68,6 @@
   .bracket-br { bottom:0;right:0;border-width:0 2px 2px 0; }
   @keyframes bracketPulse { 0%,100%{opacity:0.6;} 50%{opacity:1;box-shadow:0 0 8px var(--cyan-glow);} }
 
-  /* SVG head — exact from test.html */
   .head-svg {
     position: absolute; top: 54%; left: 50%;
     transform: translate(-50%,-50%);
@@ -83,7 +76,6 @@
     overflow: visible;
   }
 
-  /* Scan beam */
   .scan-line {
     position: absolute; left: 8px; right: 8px; height: 2px;
     background: linear-gradient(90deg, transparent 0%, rgba(0,212,232,0.4) 20%, #00d4e8 50%, rgba(0,212,232,0.4) 80%, transparent 100%);
@@ -97,7 +89,6 @@
   }
   @keyframes scanMove { 0%{top:8px;opacity:0;} 5%{opacity:1;} 95%{opacity:1;} 100%{top:calc(100% - 8px);opacity:0;} }
 
-  /* Data points */
   .data-point {
     position:absolute; width:5px; height:5px; border-radius:50%;
     background:var(--cyan); box-shadow:0 0 6px #00d4e8;
@@ -117,15 +108,11 @@
   .data-point:nth-child(6){animation-delay:1.7s;top:82%;left:32%;}
   .data-point:nth-child(7){animation-delay:2.0s;top:82%;right:32%;}
 
-  /* Rotating rings */
   .ring-svg { position:absolute; inset:-14px; width:calc(100% + 28px); height:calc(100% + 28px); pointer-events:none; }
   .ring-a { fill:none; stroke:var(--cyan); stroke-width:1; stroke-dasharray:8 12; opacity:0.3; animation:spinRing 8s linear infinite; transform-origin:center; }
   .ring-b { fill:none; stroke:var(--green); stroke-width:0.5; stroke-dasharray:4 20; opacity:0.2; animation:spinRing 4s linear infinite reverse; transform-origin:center; }
   @keyframes spinRing { from{stroke-dashoffset:0;} to{stroke-dashoffset:-200;} }
 
-  /* ══════════════════════════════════
-     STATUS BARS  (replace depth/topology/match)
-  ══════════════════════════════════ */
   .status-bars { display:flex; flex-direction:column; gap:7px; width:230px; }
   .sbar-row {
     display:flex; align-items:center; gap:8px;
@@ -140,19 +127,13 @@
   }
   .sbar-val { font-size:0.6rem; color:var(--cyan); min-width:28px; text-align:right; }
 
-  /* scan status blink */
   .scan-status-text {
     font-size:0.68rem; letter-spacing:0.2em; text-transform:uppercase;
     color:var(--cyan); animation:blink 1.2s step-end infinite; text-align:center;
   }
   @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
 
-  /* ══════════════════════════════════
-     UPLOAD STEPS  (compact, under head)
-  ══════════════════════════════════ */
-  .steps-row {
-    display: flex; gap: 10px; width: 100%; justify-content: center;
-  }
+  .steps-row { display: flex; gap: 10px; width: 100%; justify-content: center; }
 
   .step-card {
     flex: 1; max-width: 190px;
@@ -167,9 +148,7 @@
   .step-card.locked .upload-zone { pointer-events: none; cursor: default; }
   .step-card.done  { border-color: rgba(74,240,160,0.4); }
 
-  .step-top {
-    display:flex; justify-content:space-between; align-items:center; margin-bottom:7px;
-  }
+  .step-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:7px; }
   .step-num { font-size:0.58rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--cyan); }
   .step-badge {
     font-size:0.52rem; letter-spacing:0.1em; text-transform:uppercase;
@@ -191,11 +170,7 @@
     color:var(--muted); line-height:1.5;
   }
   .upload-zone span.selected { color:var(--green); }
-  input[type="file"] { display:none; }
 
-  /* ══════════════════════════════════
-     SUBMIT BUTTON
-  ══════════════════════════════════ */
   .submit-btn {
     width:100%; padding:10px;
     background:transparent;
@@ -208,9 +183,6 @@
   .submit-btn:hover:not(:disabled) { background:rgba(0,212,232,0.07); box-shadow:0 0 14px rgba(0,212,232,0.15); }
   .submit-btn:disabled { border-color:#1e2535; color:#2a3555; cursor:not-allowed; }
 
-  /* ══════════════════════════════════
-     CONSOLE LOG
-  ══════════════════════════════════ */
   .console-log {
     width:100%;
     background:rgba(0,0,0,0.35);
@@ -230,11 +202,9 @@
 <body>
 
 <div class="app">
-
   <div class="page-title">&#9632; Identity Verification Hub &#9632;</div>
 
   <div class="scan-section">
-
     <div class="head-container">
       <div class="bracket bracket-tl"></div>
       <div class="bracket bracket-tr"></div>
@@ -261,8 +231,7 @@
           </clipPath>
         </defs>
         <g transform="translate(105,135) scale(1.18) translate(-105,-112.5)">
-          <path d="M105,8 C65,8 32,38 28,78 C24,110 30,138 42,158 C50,172 54,185 56,198 C62,208 75,215 90,215 L105,217 L120,215 C135,215 148,208 154,198 C156,185 160,172 168,158 C180,138 186,110 182,78 C178,38 145,8 105,8 Z"
-                stroke="url(#headGrad)" stroke-width="2" stroke-linejoin="round" filter="url(#glow)"/>
+          <path d="M105,8 C65,8 32,38 28,78 C24,110 30,138 42,158 C50,172 54,185 56,198 C62,208 75,215 90,215 L105,217 L120,215 C135,215 148,208 154,198 C156,185 160,172 168,158 C180,138 186,110 182,78 C178,38 145,8 105,8 Z" stroke="url(#headGrad)" stroke-width="2" stroke-linejoin="round" filter="url(#glow)"/>
           <g clip-path="url(#faceClip)" stroke="#00d4e8" stroke-width="0.8" opacity="0.45" fill="none">
             <path d="M105,0 L105,255" opacity="0.7"/>
             <path d="M105,-20 Q60,110 105,255"/>
@@ -281,25 +250,13 @@
             <path d="M0,190 Q105,245 210,190"/>
             <path d="M0,215 Q105,275 210,215"/>
           </g>
-          <path d="M29,100 Q20,104 20,118 Q20,132 29,136 Q34,132 34,118 Q34,104 29,100 Z" stroke="#00d4e8" stroke-width="1.2" opacity="0.6"/>
-          <path d="M181,100 Q190,104 190,118 Q190,132 181,136 Q176,132 176,118 Q176,104 181,100 Z" stroke="#00d4e8" stroke-width="1.2" opacity="0.6"/>
-          <line x1="24" y1="90"  x2="30" y2="90"  stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="24" y1="120" x2="30" y2="120" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="24" y1="150" x2="30" y2="150" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="180" y1="90"  x2="186" y2="90"  stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="180" y1="120" x2="186" y2="120" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
-          <line x1="180" y1="150" x2="186" y2="150" stroke="#00d4e8" stroke-width="0.8" opacity="0.5"/>
         </g>
       </svg>
 
       <div class="scan-line"></div>
       <div class="data-point" data-label="NODE-1"></div>
       <div class="data-point" data-label="NODE-2"></div>
-      <div class="data-point" data-label=""></div>
-      <div class="data-point" data-label=""></div>
       <div class="data-point" data-label="NODE-3"></div>
-      <div class="data-point" data-label=""></div>
-      <div class="data-point" data-label=""></div>
     </div>
 
     <div class="status-bars">
@@ -321,9 +278,9 @@
     </div>
 
     <div class="scan-status-text" id="scanStatusText">AWAITING ASSETS...</div>
+  </div>
 
-  </div><div class="steps-row">
-
+  <div class="steps-row">
     <div class="step-card" id="step1Card">
       <div class="step-top">
         <span class="step-num">Step 01</span>
@@ -345,33 +302,24 @@
         <input type="file" id="input2" accept="image/png,image/jpeg" style="display:none">
       </label>
     </div>
-
   </div>
 
   <button class="submit-btn" id="submitBtn" disabled>Initiate Verification Pipeline</button>
-
   <div class="console-log" id="consoleLog"></div>
-
 </div>
 
 <script src="config.js"></script>
-
 <script>
-  // --- CONFIG ---
-  // Using window.APP_CONFIG.API_URL defined in config.js
   const API_URL = window.APP_CONFIG.API_URL;
   const SESSION_TOKEN = "spark-token-authorized-2026";
-  // --------------
 
   const input1    = document.getElementById('input1');
   const label1    = document.getElementById('label1');
   const badge1    = document.getElementById('badge1');
-  const zone1     = document.getElementById('zone1');
   const step2Card = document.getElementById('step2Card');
   const input2    = document.getElementById('input2');
   const label2    = document.getElementById('label2');
   const badge2    = document.getElementById('badge2');
-  const zone2     = document.getElementById('zone2');
   const submitBtn = document.getElementById('submitBtn');
   const consolEl  = document.getElementById('consoleLog');
 
@@ -390,12 +338,8 @@
 
   const toB64 = f => new Promise((res,rej)=>{const r=new FileReader();r.readAsDataURL(f);r.onload=()=>res(r.result);r.onerror=rej;});
 
-  // Function to truncate long filenames gracefully
   function formatName(name) {
-    if (name.length > 20) {
-      return name.substring(0, 10) + '...' + name.substring(name.length - 6);
-    }
-    return name;
+    return name.length > 20 ? name.substring(0, 10) + '...' + name.substring(name.length - 6) : name;
   }
 
   input1.addEventListener('change', async e => {
@@ -466,7 +410,6 @@
     submitBtn.textContent = 'Pipeline Active...';
     consolEl.innerHTML = '';
 
-    // Reset bars for pipeline
     setBar(1, 'INITIALIZING', 0, '—');
     setBar(2, 'SELFIE SCAN', 0, '—');
     setBar(3, 'MATCH SCORE', 0, '—');
@@ -477,7 +420,6 @@
 
     const uid = 'user_' + Date.now();
     try {
-      // Upload ID
       setScanText('UPLOADING ID...', '#00d4e8');
       animBar(1, 'ID UPLOAD', 60, 800);
       log('[UPLOAD] Sending ID document...', 'info');
@@ -486,11 +428,12 @@
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({action:'UPLOAD_ID', session_token:SESSION_TOKEN, user_id:uid, id_image_base64:b64ID})
       });
-      if (!r1.ok) throw new Error('ID upload failed');
+      
+      // Fix: Print explicit server status code to identify Gateway errors instantly
+      if (!r1.ok) throw new Error(`ID upload failed (Server responded with HTTP ${r1.status})`);
       animBar(1, 'ID UPLOAD', 100, 300);
       log('[OK] ID document accepted.', 'ok');
 
-      // Upload Selfie
       setScanText('UPLOADING SELFIE...', '#00d4e8');
       animBar(2, 'SELFIE UPLOAD', 60, 800);
       log('[UPLOAD] Sending selfie asset...', 'info');
@@ -499,11 +442,10 @@
         method:'POST', headers:{'Content-Type':'application/json'},
         body: JSON.stringify({action:'UPLOAD', session_token:SESSION_TOKEN, user_id:uid, selfie_image_base64:b64Selfie})
       });
-      if (!r2.ok) throw new Error('Selfie upload failed');
+      if (!r2.ok) throw new Error(`Selfie upload failed (Server responded with HTTP ${r2.status})`);
       animBar(2, 'SELFIE UPLOAD', 100, 300);
       log('[OK] Selfie asset accepted. Initiating scan...', 'ok');
 
-      // Polling
       setScanText('SCANNING...', '#00d4e8');
       animBar(3, 'MATCH SCORE', 20, 1000);
       let attempts = 0;
@@ -531,7 +473,6 @@
             submitBtn.textContent = 'Verified ✓';
             
           } else if (status === 'REJECTED') {
-            // NEW: Handle the rejection explicitly
             clearInterval(poll);
             animBar(3, 'REJECTED', 100, 300);
             setTimeout(()=>{
@@ -553,7 +494,6 @@
             submitBtn.disabled = false;
             
           } else {
-            // Grow match bar each poll attempt if still pending
             const pollPct = Math.min(20 + attempts * 10, 90);
             animBar(3, 'MATCH SCORE', pollPct, 400);
             setScanText('VERIFYING... ' + pollPct + '%', '#00d4e8');
